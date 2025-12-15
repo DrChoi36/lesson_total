@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2024년 4기 교과: 여호수아 - 성경 퀴즈</title>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --background-color: #f8f9fa;
+            --surface-color: #ffffff;
+            --text-color: #202124;
+            --subtext-color: #5f6368;
+            --correct-color: #1e8e3e;
+            --wrong-color: #d93025;
+            --border-radius: 12px;
+            --box-shadow: 0 1px 3px rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--surface-color);
+            width: 100%;
+            max-width: 700px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-height: 500px;
+        }
+
+        /* Start Screen (Lesson Selection) */
+        #start-screen {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .lesson-btn {
+            background-color: #fff;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .lesson-btn:hover {
+            background-color: #e8f0fe;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .lesson-btn.all {
+            background-color: var(--primary-color);
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        /* Header */
+        .header {
+            padding: 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .progress-indicator {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            background: #e8f0fe;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-weight: bold;
+        }
+
+        /* Quiz Content */
+        .quiz-content {
+            padding: 30px;
+            flex-grow: 1;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 500;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            padding: 16px 20px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text-color);
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: #f1f3f4;
+            border-color: #d2e3fc;
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        /* States */
+        .option-btn.correct {
+            background-color: #e6f4ea;
+            border-color: var(--correct-color);
+            color: var(--correct-color);
+            font-weight: 600;
+        }
+
+        .option-btn.wrong {
+            background-color: #fce8e6;
+            border-color: var(--wrong-color);
+            color: var(--wrong-color);
+        }
+
+        .option-btn.correct::after {
+            content: "✓";
+            position: absolute;
+            right: 20px;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong::after {
+            content: "✕";
+            position: absolute;
+            right: 20px;
+            font-weight: bold;
+        }
+
+        /* Feedback Section */
+        .feedback-section {
+            margin-top: 24px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .feedback-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--subtext-color);
+        }
+
+        /* Footer / Navigation */
+        .footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .home-btn {
+            background: none;
+            border: none;
+            color: var(--subtext-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .next-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: none;
+        }
+
+        .next-btn:hover {
+            background-color: #1765cc;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* Result Screen */
+        .result-screen {
+            text-align: center;
+            padding: 50px 30px;
+            display: none;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0 auto 24px;
+        }
+
+        .result-message {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+
+        .result-submessage {
+            color: var(--subtext-color);
+            margin-bottom: 32px;
+        }
+
+        .restart-btn {
+            background-color: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .restart-btn:hover {
+            background-color: #e8f0fe;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 0;
+                height: 100vh;
+                max-height: none;
+            }
+            body {
+                padding: 0;
+            }
+            .question-text {
+                font-size: 1.1rem;
+            }
+            .lesson-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="quiz-container">
+    
+    <div id="start-screen">
+        <h1 style="color: var(--primary-color); margin-bottom: 10px;">여호수아 - 다시 주신 기회</h1>
+        <p style="color: var(--subtext-color); margin-bottom: 30px;">2024년 4기 안식일학교 교과 퀴즈</p>
+        <div class="lesson-grid" id="lesson-grid">
+            </div>
+    </div>
+
+    <div id="quiz-view" style="display: none;">
+        <div class="header">
+            <h1 id="lesson-title">제1과</h1>
+            <span class="progress-indicator" id="progress">1 / 5</span>
+        </div>
+        
+        <div class="quiz-content">
+            <div class="question-text" id="question">문제가 여기에 표시됩니다.</div>
+            <div class="options-list" id="options">
+                </div>
+
+            <div class="feedback-section" id="feedback">
+                <span class="feedback-title" id="feedback-title">정답입니다!</span>
+                <p class="feedback-text" id="feedback-text">해설 내용</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button class="home-btn" onclick="showStartScreen()">목록으로</button>
+            <button class="next-btn" id="next-btn" onclick="nextQuestion()">다음 문제</button>
+        </div>
+    </div>
+
+    <div id="result-view" class="result-screen">
+        <div class="score-circle" id="final-score">100</div>
+        <h2 class="result-message">학습 완료!</h2>
+        <p class="result-submessage">수고하셨습니다. 말씀을 마음에 새기셨나요?</p>
+        <button class="restart-btn" onclick="showStartScreen()">다른 과 풀기</button>
+    </div>
+</div>
+
+<script>
+    // 65문제 데이터 (13과 x 5문제)
+    const allQuizData = [
+        // 1과
+        { lesson: 1, question: "여호수아 1장에서 하나님이 여호수아에게 반복해서 강조하신 말씀은 무엇입니까?", options: ["적을 두려워하라", "강하고 담대하라", "후퇴하라", "협상하라"], correct: 1, explanation: "하나님은 여호수아에게 '오직 강하고 극히 담대하여...'라고 명령하셨습니다. (수 1:7)" },
+        { lesson: 1, question: "여호수아 1:8에 따르면 형통하고 성공하는 비결은 무엇입니까?", options: ["군사력을 키우는 것", "율법책을 입에서 떠나지 않게 하고 묵상하며 지켜 행하는 것", "이웃 국가와 동맹을 맺는 것", "많은 재물을 모으는 것"], correct: 1, explanation: "율법책을 주야로 묵상하고 그 안에 기록된 대로 다 지켜 행하면 길이 평탄하고 형통하리라고 약속하셨습니다." },
+        { lesson: 1, question: "여호수아는 누구의 뒤를 이어 이스라엘의 지도자가 되었습니까?", options: ["아론", "갈렙", "모세", "기드온"], correct: 2, explanation: "여호수아는 모세의 수종자였으며 모세가 죽은 후 새로운 지도자로 세움 받았습니다." },
+        { lesson: 1, question: "이스라엘 자손에게 '두려워하지 말라'고 하신 근거는 무엇입니까?", options: ["그들의 무기가 강력해서", "적이 약해서", "네가 어디로 가든지 네 하나님 여호와가 너와 함께 하느니라", "여호수아가 전략가라서"], correct: 2, explanation: "하나님의 임재(함께하심)가 두려움을 이기는 근거입니다. (수 1:9)" },
+        { lesson: 1, question: "교과에서 '성공'의 성경적 정의와 가장 가까운 것은?", options: ["부자가 되는 것", "높은 지위에 오르는 것", "하나님을 경외하고 말씀에 순종하여 그분의 뜻과 조화를 이루는 것", "경쟁에서 이기는 것"], correct: 2, explanation: "성경적 성공은 하나님의 율법과 영적 가치와 조화를 이루는 상태입니다." },
+
+        // 2과
+        { lesson: 2, question: "여호수아가 여리고를 정탐하기 위해 보낸 정탐꾼은 몇 명입니까?", options: ["2명", "10명", "12명", "7명"], correct: 0, explanation: "여호수아는 싯딤에서 두 명의 정탐꾼을 보냈습니다. (수 2:1)" },
+        { lesson: 2, question: "정탐꾼들을 숨겨주고 이스라엘의 하나님을 믿은 여인의 이름은?", options: ["사라", "라합", "미리암", "에스더"], correct: 1, explanation: "기생 라합은 믿음으로 정탐꾼을 영접하여 멸망하지 않았습니다. (히 11:31)" },
+        { lesson: 2, question: "라합이 정탐꾼들에게 요구한 것은 무엇입니까?", options: ["돈", "높은 지위", "자신과 아버지의 집(가족)의 구원", "이스라엘 시민권"], correct: 2, explanation: "라합은 선대함에 대한 증표로 자신과 가족의 생명을 구해달라고 요청했습니다." },
+        { lesson: 2, question: "라합의 집을 구별하기 위한 표식은 무엇이었습니까?", options: ["창문에 맨 붉은 줄", "문에 바른 피", "지붕 위의 깃발", "대문 앞의 돌"], correct: 0, explanation: "정탐꾼들은 창문에 붉은 줄을 매라고 지시했습니다. 이는 그리스도의 보혈을 상징합니다." },
+        { lesson: 2, question: "라합의 이야기가 보여주는 '은혜'의 의미는 무엇입니까?", options: ["착한 사람만 구원받는다", "자격 없는 자에게 베푸시는 하나님의 구원과 기회", "이스라엘 혈통만 구원받는다", "행위로 구원받는다"], correct: 1, explanation: "이방인이자 기생이었던 라합이 구원받고 예수님의 족보에 들어간 것은 놀라운 하나님의 은혜입니다." },
+
+        // 3과
+        { lesson: 3, question: "이스라엘 백성이 요단강을 건널 때 가장 앞서 간 것은 무엇입니까?", options: ["여호수아", "군대", "언약궤를 멘 제사장들", "유다 지파"], correct: 2, explanation: "언약궤를 멘 제사장들이 백성 앞서 나갔으며, 그들의 발이 물에 잠기자 물이 멈췄습니다." },
+        { lesson: 3, question: "요단강 도하를 기념하기 위해 하나님이 명령하신 것은?", options: ["금 금송아지를 만들라", "큰 잔치를 벌이라", "요단강 가운데서 가져온 열두 돌로 기념비를 세우라", "노래를 지어 부르라"], correct: 2, explanation: "후일 자손들이 물을 때 알게 하기 위해 열두 돌로 기념비를 세우게 하셨습니다." },
+        { lesson: 3, question: "이스라엘 백성이 요단강을 건너기 위해 준비하며 해야 했던 일은?", options: ["무기를 정비하라", "스스로 성결하게 하라", "식량을 비축하라", "지도를 그리라"], correct: 1, explanation: "여호수아는 백성에게 '너희는 자신을 성결하게 하라'고 말했습니다. (수 3:5)" },
+        { lesson: 3, question: "요단강을 건넌 사건은 신약의 어떤 예식과 의미가 연결됩니까?", options: ["성만찬", "침례", "안수", "금식"], correct: 1, explanation: "물 가운데를 지나 약속의 땅으로 들어가는 것은 침례와 옛 자아의 죽음, 새 생명을 상징합니다." },
+        { lesson: 3, question: "기념비(돌)를 세운 주된 목적은 무엇입니까?", options: ["경계선을 표시하기 위해", "후손들에게 하나님의 기적을 교육하고 기억하게 하기 위해", "적들에게 위엄을 보이기 위해", "제단을 쌓기 위해"], correct: 1, explanation: "나중에 후일 너희 자손들이 묻거든 이스라엘이 마른 땅을 밟고 건넜음을 알게 하려 함입니다." },
+
+        // 4과
+        { lesson: 4, question: "여리고 성 가까이에서 여호수아 앞에 나타난 인물은 누구입니까?", options: ["가브리엘 천사", "여호와의 군대 대장", "모세의 영", "적군의 장수"], correct: 1, explanation: "여호수아는 칼을 빼어 들고 서 있는 '여호와의 군대 대장'을 만났습니다. (수 5:14)" },
+        { lesson: 4, question: "여호와의 군대 대장이 여호수아에게 한 명령은 무엇입니까?", options: ["공격하라", "네 발에서 신을 벗으라", "제단을 쌓으라", "도망가라"], correct: 1, explanation: "모세에게 하셨던 것처럼, '네가 선 곳은 거룩하니 네 발에서 신을 벗으라'고 하셨습니다." },
+        { lesson: 4, question: "여호수아서의 전쟁 배후에 있는 더 큰 전쟁은 무엇입니까?", options: ["영토 분쟁", "자원 전쟁", "선과 악의 대쟁투(우주적 전쟁)", "부족 간의 갈등"], correct: 2, explanation: "이 땅의 전쟁은 하나님과 사탄 사이의 우주적 대쟁투의 일부입니다." },
+        { lesson: 4, question: "출애굽기 14:14에서 모세는 백성에게 하나님이 어떻게 하실 것이라고 했습니까?", options: ["너희를 위해 싸우시리니 너희는 가만히 있을지니라", "너희가 열심히 싸워야 한다", "동맹군을 보내주실 것이다", "협상하실 것이다"], correct: 0, explanation: "하나님이 친히 용사가 되어 싸우심을 강조했습니다." },
+        { lesson: 4, question: "가나안 정복 전쟁에서 이스라엘의 승패를 좌우한 것은?", options: ["군사력", "첨단 무기", "하나님에 대한 순종과 믿음", "탁월한 전략"], correct: 2, explanation: "여리고와 아이 성의 대조에서 보듯, 승패는 전적으로 하나님께 대한 믿음과 순종에 달려있었습니다." },
+
+        // 5과
+        { lesson: 5, question: "가나안 족속들이 멸망당해야 했던 근본적인 이유는 무엇입니까?", options: ["이스라엘에게 땅이 필요해서", "그들의 죄악이 관영(가득 참)했기 때문에", "그들이 약해서", "우연히"], correct: 1, explanation: "창세기 15:16에 예언된 대로 아모리 족속의 죄악이 가득 차서 심판을 받게 된 것입니다." },
+        { lesson: 5, question: "기브온 거민들은 멸망을 피하기 위해 어떻게 했습니까?", options: ["끝까지 싸웠다", "멀리서 온 사절단인 것처럼 속여 조약을 맺었다", "다른 나라로 도망갔다", "뇌물을 주었다"], correct: 1, explanation: "기브온 사람들은 낡은 옷과 곰팡이 난 떡으로 위장하여 이스라엘과 평화 조약을 맺었습니다." },
+        { lesson: 5, question: "기브온 거민들이 이스라엘의 종이 되어 맡은 임무는?", options: ["군인", "나무를 패며 물을 긷는 자", "요리사", "농사꾼"], correct: 1, explanation: "그들은 여호와의 단을 위하여 나무 패며 물 긷는 자가 되었습니다." },
+        { lesson: 5, question: "하나님은 이스라엘의 전쟁에서 어떤 역할을 하셨습니까?", options: ["구경꾼", "심판자이자 전사", "평화 유지군", "조언자"], correct: 1, explanation: "하나님은 죄에 대한 심판자로서, 그리고 자기 백성을 위해 싸우시는 전사로서 개입하셨습니다." },
+        { lesson: 5, question: "태양과 달이 멈춘 기적은 어느 전투에서 일어났습니까?", options: ["여리고 전투", "아이 성 전투", "기브온을 구원하기 위한 아모리 다섯 왕과의 전투", "하솔 전투"], correct: 2, explanation: "여호수아가 '태양아 너는 기브온 위에 머무르라'고 외쳤을 때 하나님이 응답하셨습니다." },
+
+        // 6과
+        { lesson: 6, question: "여리고 성 점령 시 하나님이 금지하신 것은 무엇입니까?", options: ["성벽 무너뜨리기", "모든 전리품을 개인이 취하는 것(온전히 바친 물건)", "나팔 불기", "소리 지르기"], correct: 1, explanation: "여리고의 모든 것은 하나님께 온전히 바쳐진 것(헤렘)이므로 개인이 취할 수 없었습니다." },
+        { lesson: 6, question: "하나님의 명령을 어기고 물건을 훔쳐 아이 성 전투 패배의 원인이 된 사람은?", options: ["갈렙", "아간", "비느하스", "고라"], correct: 1, explanation: "아간이 시날 산 외투와 금, 은을 탐내어 숨겼기 때문에 이스라엘이 패배했습니다." },
+        { lesson: 6, question: "아간의 죄가 주는 교훈은 무엇입니까?", options: ["한 사람의 죄가 공동체 전체에 영향을 미친다", "물건을 잘 숨겨야 한다", "전쟁에는 패배가 있을 수 있다", "운이 나빴다"], correct: 0, explanation: "아간 한 사람의 범죄로 인해 이스라엘 온 회중이 고통을 겪었습니다." },
+        { lesson: 6, question: "아간이 처형당한 골짜기의 이름은 무엇이며, 뜻은 무엇입니까?", options: ["기드론(슬픔)", "아골(괴로움/고통)", "힌놈(지옥)", "에라(상수리)"], correct: 1, explanation: "아골 골짜기는 '괴로움의 골짜기'라는 뜻입니다. 후에 소망의 문으로 언급되기도 합니다." },
+        { lesson: 6, question: "아이 성 전투의 패배 후 승리하기 위해 여호수아가 한 일은?", options: ["더 많은 군사를 모았다", "죄를 제거하고 백성을 성결케 했다", "무기를 개량했다", "적과 협상했다"], correct: 1, explanation: "내부의 죄(아간)를 해결하고 성결케 한 후에야 다시 승리할 수 있었습니다." },
+
+        // 7과
+        { lesson: 7, question: "여호수아가 에발 산에서 한 중요한 일은 무엇입니까?", options: ["성을 건축함", "제단을 쌓고 율법을 낭독함(언약 갱신)", "적을 처형함", "휴식을 취함"], correct: 1, explanation: "모세의 명령대로 에발 산에 제단을 쌓고 축복과 저주의 말씀을 낭독하며 언약을 갱신했습니다." },
+        { lesson: 7, question: "전쟁 중에 제단을 쌓고 예배를 드린 행위의 의미는?", options: ["시간 낭비", "전략적 휴식", "가장 중요한 우선순위가 하나님(언약)임을 확인", "적을 속이기 위함"], correct: 2, explanation: "가장 중요한 것은 땅을 차지하는 것보다 하나님과의 관계를 바로 세우는 것임을 보여줍니다." },
+        { lesson: 7, question: "그리심 산과 에발 산은 각각 무엇을 상징합니까?", options: ["전쟁과 평화", "축복과 저주", "시작과 끝", "하늘과 땅"], correct: 1, explanation: "그리심 산에서는 축복을, 에발 산에서는 저주를 선포했습니다." },
+        { lesson: 7, question: "요단강을 건넌 직후 길갈에서 행한 두 가지 예식은?", options: ["할례와 유월절", "금식과 통곡", "축제와 춤", "재판과 처형"], correct: 0, explanation: "광야에서 태어난 세대에게 할례를 행하고, 유월절을 지켰습니다." },
+        { lesson: 7, question: "가나안 땅의 소산물을 먹은 다음 날 어떤 일이 일어났습니까?", options: ["홍수가 났다", "만나(Manna)가 그쳤다", "적이 공격했다", "지진이 났다"], correct: 1, explanation: "약속의 땅의 열매를 먹자 광야 40년간 내리던 만나는 그쳤습니다." },
+
+        // 8과
+        { lesson: 8, question: "85세의 나이에도 '이 산지를 내게 주소서'라고 말한 믿음의 사람은?", options: ["여호수아", "갈렙", "옷니엘", "엘르아살"], correct: 1, explanation: "갈렙은 45년 전의 약속을 기억하며 헤브론 산지를 요구했습니다." },
+        { lesson: 8, question: "갈렙이 정탐꾼 때부터 보여준 태도는?", options: ["부정적이었다", "하나님을 온전히 좇았다(충성)", "중립적이었다", "비판적이었다"], correct: 1, explanation: "성경은 갈렙이 '나의 하나님 여호와를 온전히 좇았으므로'라고 평가합니다." },
+        { lesson: 8, question: "여호수아는 땅 분배를 모두 마친 후 언제 자신의 기업을 받았습니까?", options: ["제일 먼저", "중간에", "모든 지파가 받은 후 맨 마지막에", "받지 않았다"], correct: 2, explanation: "지도자였지만 백성을 먼저 챙기고 자신은 맨 마지막에 딤낫 세라를 기업으로 받았습니다." },
+        { lesson: 8, question: "갈렙의 딸 악사가 남편 옷니엘에게 구한 것은?", options: ["금과 은", "밭과 윗샘, 아랫샘", "아름다운 옷", "보석"], correct: 1, explanation: "악사는 네게브 땅뿐만 아니라 샘물(생명)을 구하는 지혜를 보였습니다." },
+        { lesson: 8, question: "우리가 바라보아야 할 믿음의 궁극적인 모본은 누구입니까?", options: ["여호수아", "갈렙", "예수 그리스도", "모세"], correct: 2, explanation: "히브리서 12:2은 믿음의 주요 또 온전케 하시는 이인 예수를 바라보라고 합니다." },
+
+        // 9과
+        { lesson: 9, question: "도피성은 어떤 사람을 위해 마련된 곳입니까?", options: ["고의로 살인한 자", "부지중에(실수로) 살인한 자", "도둑", "빚진 자"], correct: 1, explanation: "원한 없이 실수로 사람을 죽인 자가 보복을 피해 생명을 보존하도록 마련된 곳입니다." },
+        { lesson: 9, question: "레위 지파에게는 왜 땅 분배가 없었습니까?", options: ["벌을 받아서", "인구가 적어서", "여호와 하나님이 그들의 기업이시기 때문에", "이미 부자여서"], correct: 2, explanation: "레위 지파는 성막 봉사를 위해 구별되었으며 하나님 자체가 그들의 기업이셨습니다." },
+        { lesson: 9, question: "희년(Jubilee) 제도의 주된 목적은 무엇입니까?", options: ["토지 투기 조장", "원원한 소유권 인정", "회복과 자유(땅과 사람의 해방)", "왕의 권한 강화"], correct: 2, explanation: "50년마다 돌아오는 희년은 잃어버린 기업을 되찾고 종된 자가 자유를 얻는 회복의 해입니다." },
+        { lesson: 9, question: "이스라엘이 땅을 차지한 것은 그들의 공로 때문입니까?", options: ["그렇다", "아니다, 하나님의 은혜와 선물이다", "일부분 그렇다", "군사력 덕분이다"], correct: 1, explanation: "가나안 땅은 언약에 따라 하나님이 은혜로 주신 선물입니다." },
+        { lesson: 9, question: "약속의 땅 가나안은 궁극적으로 무엇을 상징합니까?", options: ["중동의 영토", "부와 명예", "새 하늘과 새 땅(천국)", "교회 건물"], correct: 2, explanation: "지상의 가나안은 영원한 안식처인 천국을 표상합니다." },
+
+        // 10과
+        { lesson: 10, question: "여호수아의 이름의 뜻은 무엇이며, 헬라어로는 누구의 이름과 같습니까?", options: ["하나님은 심판이시다 / 요한", "여호와는 구원이시다 / 예수", "왕이시다 / 다윗", "선지자 / 엘리야"], correct: 1, explanation: "여호수아(예슈아)는 '여호와는 구원이시다'라는 뜻이며 헬라어로 '예수'입니다." },
+        { lesson: 10, question: "성경적 표상학에서 여호수아는 누구의 예표(Type)입니까?", options: ["아브라함", "다윗", "예수 그리스도", "바울"], correct: 2, explanation: "백성을 약속의 땅(안식)으로 인도하는 여호수아는 우리를 천국으로 인도하는 예수님을 예표합니다." },
+        { lesson: 10, question: "히브리서 4장은 여호수아가 주지 못한 참된 '이것'을 예수님이 주신다고 합니다. 무엇입니까?", options: ["돈", "안식", "명예", "율법"], correct: 1, explanation: "여호수아가 그들에게 안식을 주었더라면... (히 4:8). 예수님은 참된 안식을 주십니다." },
+        { lesson: 10, question: "모세와 여호수아의 관계처럼, 율법은 우리를 누구에게로 인도합니까?", options: ["선지자", "예수 그리스도", "재판장", "솔로몬"], correct: 1, explanation: "율법(모세)은 우리를 약속의 땅으로 인도하는 예수님(여호수아)에게로 이끄는 몽학선생입니다." },
+        { lesson: 10, question: "여호수아의 고별 설교에서 강조한 '선택'의 문제는 오늘날 우리에게 무엇을 요구합니까?", options: ["어느 교회에 갈지", "누구를 섬길지 매일 결단함", "어떤 직업을 가질지", "어디에 살지"], correct: 1, explanation: "오늘날 우리도 매일 예수님을 주인으로 섬길지 세상을 섬길지 선택해야 합니다." },
+
+        // 11과
+        { lesson: 11, question: "요단 동편 지파들이 귀환하면서 쌓은 제단 때문에 발생한 문제는?", options: ["제단이 무너짐", "서편 지파들이 배교로 오해하여 전쟁하려 함", "이방신을 섬김", "하나님이 기뻐하심"], correct: 1, explanation: "동편 지파가 쌓은 큰 제단을 보고 서편 지파는 그들이 우상숭배나 분열을 꾀한다고 오해했습니다." },
+        { lesson: 11, question: "동편 지파가 제단을 쌓은 진짜 이유는 무엇입니까?", options: ["제사를 드리기 위해", "우상을 섬기기 위해", "훗날 요단강 때문에 관계가 끊어질까 봐 증거로 삼기 위해", "과시하기 위해"], correct: 2, explanation: "그 제단은 제사 용도가 아니라, 그들도 여호와를 섬기는 동일한 민족임을 증거하는 '증거의 제단'이었습니다." },
+        { lesson: 11, question: "이 갈등은 어떻게 해결되었습니까?", options: ["전쟁으로", "비느하스 대표단과의 대화와 해명을 통해", "무시함으로", "지진으로"], correct: 1, explanation: "직접 찾아가 대화하고 진의를 확인함으로써 오해가 풀리고 평화가 유지되었습니다." },
+        { lesson: 11, question: "이 사건이 주는 교훈은?", options: ["무조건 싸워야 한다", "성급한 판단을 피하고 소통해야 한다", "강을 건너지 말아야 한다", "제단을 많이 쌓아야 한다"], correct: 1, explanation: "형제의 동기를 함부로 판단하지 말고 대화를 통해 오해를 푸는 지혜가 필요합니다." },
+        { lesson: 11, question: "그 제단의 이름은 무엇이라 불렸습니까?", options: ["벧엘", "에벤에셀", "엣(Ed)", "실로"], correct: 2, explanation: "그들이 제단을 '엣'이라 불렀으니 이는 여호와께서 하나님이 되시는 증거라 함이었습니다." },
+
+        // 12과
+        { lesson: 12, question: "여호수아의 고별 설교의 핵심 주제는 무엇입니까?", options: ["영토 확장", "경제 발전", "오직 여호와만 섬기라(하나님의 신실하심)", "왕정 수립"], correct: 2, explanation: "하나님이 모든 약속을 지키셨으니 너희도 그분만을 사랑하고 섬기라는 것입니다." },
+        { lesson: 12, question: "여호수아는 백성들에게 이방 민족과 어떻게 하라고 경고했습니까?", options: ["혼인하고 섞여 살라", "친하게 지내라", "멀리하고 그들의 신을 섬기지 말라", "무역하라"], correct: 2, explanation: "이방 민족과 혼인하거나 그들의 신을 섬기면 그들이 올무와 덫이 될 것이라고 경고했습니다." },
+        { lesson: 12, question: "하나님을 사랑하라는 명령의 참된 의미는?", options: ["강요된 복종", "감정적인 흥분", "언약 관계 안에서의 자발적 충성과 헌신", "지식적 동의"], correct: 2, explanation: "하나님을 사랑하는 것은 마음을 다해 그분께 밀착(다바크)하고 계명을 지키는 것입니다." },
+        { lesson: 12, question: "여호수아 23:14에서 여호수아는 하나님의 말씀에 대해 무엇이라고 증언합니까?", options: ["일부만 이루어졌다", "하나도 남음 없이 다 응하였다", "더디게 이루어진다", "알 수 없다"], correct: 1, explanation: "하나님의 선한 말씀이 하나도 남음 없이 다 성취되었다고 고백합니다." },
+        { lesson: 12, question: "배교의 결과로 경고된 것은 무엇입니까?", options: ["아름다운 땅에서 멸망하리라", "부자가 되리라", "강해지리라", "평안하리라"], correct: 0, explanation: "언약을 어기면 하나님이 주신 아름다운 땅에서도 진노를 받아 멸망할 수 있음을 경고했습니다." },
+
+        // 13과
+        { lesson: 13, question: "여호수아가 마지막으로 언약을 갱신한 장소는 어디입니까?", options: ["예루살렘", "여리고", "세겜", "길갈"], correct: 2, explanation: "여호수아 24장에서 모든 지파를 세겜에 모으고 고별 설교와 언약 갱신을 했습니다." },
+        { lesson: 13, question: "여호수아의 유명한 선언 '오직 나와 내 집은 OO를 섬기겠노라'. 빈칸은?", options: ["바알", "여호와", "돈", "왕"], correct: 1, explanation: "너희가 섬길 자를 오늘 택하라 오직 나와 내 집은 여호와를 섬기겠노라. (수 24:15)" },
+        { lesson: 13, question: "백성들이 '우리가 여호와를 섬기겠나이다'라고 했을 때 여호수아의 반응은?", options: ["기뻐하며 칭찬했다", "너희가 능히 섬기지 못할 것은... (질투하는 하나님)", "즉시 잔치를 열었다", "믿지 않았다"], correct: 1, explanation: "여호수아는 결단의 엄중함을 강조하며, 하나님은 거룩하고 질투하는 분이심을 상기시켰습니다." },
+        { lesson: 13, question: "세겜 언약의 증거로 삼은 것은 무엇입니까?", options: ["큰 돌", "금송아지", "칼", "두루마리"], correct: 0, explanation: "큰 돌을 가져다가 상수리나무 아래 세우고 증거로 삼았습니다." },
+        { lesson: 13, question: "여호수아서의 마지막은 누구의 죽음과 장사로 끝납니까?", options: ["모세와 아론", "여호수아, 엘르아살, (요셉의 뼈)", "갈렙과 옷니엘", "라합과 살몬"], correct: 1, explanation: "여호수아와 대제사장 엘르아살의 죽음, 그리고 요셉의 뼈를 세겜에 장사한 기록으로 마칩니다." }
+    ];
+
+    // 앱 상태 변수
+    let currentQuizData = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let isAnswered = false;
+
+    // DOM 요소
+    const quizContainer = document.getElementById('quiz-container');
+    const startScreen = document.getElementById('start-screen');
+    const lessonGrid = document.getElementById('lesson-grid');
+    const quizView = document.getElementById('quiz-view');
+    const resultView = document.getElementById('result-view');
+    
+    // 퀴즈 뷰 요소들
+    const lessonTitleEl = document.getElementById('lesson-title');
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const feedbackEl = document.getElementById('feedback');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackText = document.getElementById('feedback-text');
+    const nextBtn = document.getElementById('next-btn');
+    const progressEl = document.getElementById('progress');
+    const finalScoreEl = document.getElementById('final-score');
+
+    // 시작 화면 생성
+    function initStartScreen() {
+        lessonGrid.innerHTML = '';
+        
+        // 전체 풀기 버튼
+        const allBtn = document.createElement('button');
+        allBtn.className = 'lesson-btn all';
+        allBtn.textContent = '전체 문제 풀기 (65문제)';
+        allBtn.onclick = () => startQuiz('all');
+        lessonGrid.appendChild(allBtn);
+
+        // 1~13과 버튼
+        for (let i = 1; i <= 13; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'lesson-btn';
+            btn.textContent = `제${i}과`;
+            btn.onclick = () => startQuiz(i);
+            lessonGrid.appendChild(btn);
+        }
+    }
+
+    // 퀴즈 시작
+    function startQuiz(lesson) {
+        currentQuestionIndex = 0;
+        score = 0;
+        
+        if (lesson === 'all') {
+            currentQuizData = [...allQuizData];
+            lessonTitleEl.textContent = "전체 복습";
+        } else {
+            currentQuizData = allQuizData.filter(q => q.lesson === lesson);
+            lessonTitleEl.textContent = `제${lesson}과`;
+        }
+
+        startScreen.style.display = 'none';
+        resultView.style.display = 'none';
+        quizView.style.display = 'block';
+        
+        loadQuestion();
+    }
+
+    // 화면 전환: 시작 화면으로
+    function showStartScreen() {
+        quizView.style.display = 'none';
+        resultView.style.display = 'none';
+        startScreen.style.display = 'block';
+    }
+
+    // 문제 로드
+    function loadQuestion() {
+        isAnswered = false;
+        const currentData = currentQuizData[currentQuestionIndex];
+        
+        // UI 리셋
+        feedbackEl.style.display = 'none';
+        nextBtn.style.display = 'none';
+        optionsEl.innerHTML = '';
+        
+        // 진행률 업데이트
+        progressEl.textContent = `${currentQuestionIndex + 1} / ${currentQuizData.length}`;
+        
+        // 문제 텍스트 설정
+        questionEl.textContent = currentData.question;
+
+        // 보기 버튼 생성
+        currentData.options.forEach((option, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = option;
+            btn.onclick = () => checkAnswer(index);
+            optionsEl.appendChild(btn);
+        });
+    }
+
+    // 정답 확인
+    function checkAnswer(selectedIndex) {
+        if (isAnswered) return;
+        isAnswered = true;
+
+        const currentData = currentQuizData[currentQuestionIndex];
+        const buttons = optionsEl.getElementsByClassName('option-btn');
+        const isCorrect = selectedIndex === currentData.correct;
+
+        // 스타일 적용
+        if (isCorrect) {
+            buttons[selectedIndex].classList.add('correct');
+            score++;
+            feedbackTitle.textContent = "정답입니다!";
+            feedbackTitle.style.color = "var(--correct-color)";
+        } else {
+            buttons[selectedIndex].classList.add('wrong');
+            buttons[currentData.correct].classList.add('correct');
+            feedbackTitle.textContent = "오답입니다.";
+            feedbackTitle.style.color = "var(--wrong-color)";
+        }
+
+        // 나머지 버튼 비활성화
+        Array.from(buttons).forEach(btn => btn.disabled = true);
+
+        // 피드백 표시
+        feedbackText.textContent = currentData.explanation;
+        feedbackEl.style.display = 'block';
+        nextBtn.style.display = 'block';
+    }
+
+    // 다음 문제로 이동
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < currentQuizData.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    // 결과 화면 표시
+    function showResult() {
+        quizView.style.display = 'none';
+        resultView.style.display = 'block';
+        
+        // 점수 계산 및 표시
+        const percentage = Math.round((score / currentQuizData.length) * 100);
+        finalScoreEl.textContent = percentage;
+        
+        // 메시지 설정
+        const msgEl = document.querySelector('.result-message');
+        const subMsgEl = document.querySelector('.result-submessage');
+        
+        if (percentage === 100) {
+            msgEl.textContent = "완벽합니다!";
+            subMsgEl.textContent = "여호수아서의 내용을 깊이 이해하셨군요.";
+        } else if (percentage >= 70) {
+            msgEl.textContent = "훌륭합니다!";
+            subMsgEl.textContent = "교과 내용을 잘 이해하고 계십니다.";
+        } else {
+            msgEl.textContent = "수고하셨습니다.";
+            subMsgEl.textContent = "다시 한번 복습해 볼까요?";
+        }
+    }
+
+    // 다시 풀기 (현재 선택된 과 다시 풀기)
+    function restartQuiz() {
+        // 현재 선택된 과 그대로 다시 시작
+        currentQuestionIndex = 0;
+        score = 0;
+        resultView.style.display = 'none';
+        quizView.style.display = 'block';
+        loadQuestion();
+    }
+
+    // 앱 초기화
+    initStartScreen();
+
+</script>
+
+</body>
+</html>
